@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/nic-chen/tcp-example/protocol"
 )
 
 var host = flag.String("host", "localhost", `The host to connect to; defaults to "localhost".`)
@@ -31,15 +33,24 @@ func main() {
 		os.Exit(1)
 	}
 
+	// read messages from server
 	go readConnection(conn)
 
+	// send messages to server
 	for {
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("> ")
 		text, _ := reader.ReadString('\n')
 
 		conn.SetWriteDeadline(time.Now().Add(1 * time.Second))
-		_, err := conn.Write([]byte(text))
+		p := protocol.NewDefaultProtocol()
+		p.MessageID = 1
+		p.ServiceName = "user"
+		p.FunctionName = "login"
+		p.Body = []byte(text)
+
+		fmt.Println("p.Pack():", string(p.Pack()))
+		_, err := conn.Write(p.Pack())
 		if err != nil {
 			fmt.Println("Error writing to stream.")
 			break
@@ -47,22 +58,15 @@ func main() {
 	}
 }
 
-func readConnection(conn net.Conn) {
+func readConnection(c net.Conn) {
 	for {
-		scanner := bufio.NewScanner(conn)
+		p := protocol.NewDefaultProtocol()
 
 		for {
-			ok := scanner.Scan()
-			text := scanner.Text()
-
-			command := handleCommands(text)
-			if !command {
-				fmt.Printf("\b\b** %s\n> ", text)
-			}
-
-			if !ok {
-				fmt.Println("Reached EOF on server connection.")
-				return
+			err := p.UnPack(c)
+			if err != nil {
+				fmt.Println("Error reading from stream.")
+				break
 			}
 		}
 	}

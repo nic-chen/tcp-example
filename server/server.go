@@ -1,13 +1,14 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"net"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/nic-chen/tcp-example/protocol"
 )
 
 var addr = flag.String("addr", "", "The address to listen to; default is 0.0.0.0")
@@ -26,6 +27,7 @@ func main() {
 
 	for {
 		conn, err := listener.Accept()
+		fmt.Println("Accepting connection...")
 		if err != nil {
 			fmt.Printf("Some connection error: %s\n", err)
 		}
@@ -34,20 +36,19 @@ func main() {
 	}
 }
 
-func handleConnection(conn net.Conn) {
-	remoteAddr := conn.RemoteAddr().String()
+func handleConnection(c net.Conn) {
+	remoteAddr := c.RemoteAddr().String()
 	fmt.Println("Client connected from " + remoteAddr)
 
-	scanner := bufio.NewScanner(conn)
+	p := protocol.NewDefaultProtocol()
 
 	for {
-		ok := scanner.Scan()
-
-		if !ok {
+		err := p.UnPack(c)
+		fmt.Println("p.UnPack(c):", string(p.Body), " id:", p.MessageID, " svc:", p.ServiceName, " func:", p.FunctionName)
+		if err != nil {
+			fmt.Println("Error reading from stream.")
 			break
 		}
-
-		handleMessage(scanner.Text(), conn)
 	}
 
 	fmt.Println("Client at " + remoteAddr + " disconnected.")
