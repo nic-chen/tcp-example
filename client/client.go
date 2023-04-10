@@ -62,7 +62,7 @@ func readConnection(conn net.Conn) {
 
 			if !ok {
 				fmt.Println("Reached EOF on server connection.")
-				break
+				return
 			}
 		}
 	}

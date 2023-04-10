@@ -56,22 +56,26 @@ func handleConnection(conn net.Conn) {
 func handleMessage(message string, conn net.Conn) {
 	fmt.Println("> " + message)
 
-	if len(message) > 0 && message[0] == '/' {
-		switch {
-		case message == "/time":
-			resp := "It is " + time.Now().String() + "\n"
-			fmt.Print("< " + resp)
-			conn.Write([]byte(resp))
+	if len(message) > 0 {
+		if message[0] == '/' {
+			switch {
+			case message == "/time":
+				resp := "It is " + time.Now().String() + "\n"
+				fmt.Print("< " + resp)
+				conn.Write([]byte(resp))
 
-		case message == "/quit":
-			fmt.Println("Quitting.")
-			conn.Write([]byte("I'm shutting down now.\n"))
-			fmt.Println("< " + "%quit%")
-			conn.Write([]byte("%quit%\n"))
-			os.Exit(0)
+			case message == "/quit":
+				fmt.Println("Quitting.")
+				conn.Write([]byte("I'm shutting down now.\n"))
+				fmt.Println("< " + "%quit%")
+				conn.Write([]byte("%quit%\n"))
+				os.Exit(0)
 
-		default:
-			conn.Write([]byte("Unrecognized command.\n"))
+			default:
+				conn.Write([]byte("Unrecognized command.\n"))
+			}
 		}
+		fmt.Println("rrrr.....")
+		conn.Write([]byte(message + "\n"))
 	}
 }
