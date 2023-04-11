@@ -49,6 +49,10 @@ func handleConnection(c net.Conn) {
 			fmt.Println("Error reading from stream.")
 			break
 		}
+
+		bs := p.Pack()
+		fmt.Println("write to client...", string(bs))
+		c.Write(bs)
 	}
 
 	fmt.Println("Client at " + remoteAddr + " disconnected.")
