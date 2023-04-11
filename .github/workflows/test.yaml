@@ -1,0 +1,30 @@
+name: Run Test Case
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  run-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Go Environment
+        uses: actions/setup-go@v1
+        with:
+          go-version: '1.19.2'
+      - name: Start Server
+        run: |
+          go run server.go -port 8000 &
+      - name: Run Client
+        run: |
+          out=$(go run client.go -host localhost -port 8000 -unary true)
+          if [[ $out =~ *'{"username":"test","password":"123456"}'* ]]; then
+            echo "Test failed"
+            exit 1
+          fi
