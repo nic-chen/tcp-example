@@ -21,7 +21,9 @@ jobs:
       - name: Start Server
         run: |
           go run server.go -port 8000 &
+        working-directory: server
       - name: Run Client
+        working-directory: client
         run: |
           out=$(go run client.go -host localhost -port 8000 -unary true)
           if [[ $out =~ *'{"username":"test","password":"123456"}'* ]]; then
