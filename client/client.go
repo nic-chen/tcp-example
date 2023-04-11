@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"regexp"
 	"strconv"
 	"sync"
 	"time"
@@ -46,8 +45,6 @@ func unaryHandler(c net.Conn) {
 	}
 
 	fmt.Println("server response:", string(p.Body), " id:", p.MessageID, " svc:", p.ServiceName, " func:", p.FunctionName)
-
-	// wg.Wait()
 }
 
 func unaryReadConnection(c net.Conn, wg *sync.WaitGroup) {
@@ -131,24 +128,4 @@ func readConnection(c net.Conn) {
 			fmt.Println("server response, body:", string(p.Body), " id:", p.MessageID, " svc:", p.ServiceName, " func:", p.FunctionName)
 		}
 	}
-}
-
-func handleCommands(text string) bool {
-	r, err := regexp.Compile("^%.*%$")
-	if err != nil {
-		return false
-	}
-
-	if r.MatchString(text) {
-
-		switch {
-		case text == "%quit%":
-			fmt.Println("\b\bServer is leaving. Hanging up.")
-			os.Exit(0)
-		}
-
-		return true
-	}
-
-	return false
 }
