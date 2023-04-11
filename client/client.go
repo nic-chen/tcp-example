@@ -7,7 +7,6 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/nic-chen/tcp-example/protocol"
@@ -18,54 +17,27 @@ var port = flag.Int("port", 8000, "The port to connect to; defaults to 8000.")
 var unary = flag.Bool("unary", false, "Whether to use unary RPC; defaults to false.")
 
 func unaryHandler(c net.Conn) {
-	// wait for response
-	// wg := &sync.WaitGroup{}
-	// go unaryReadConnection(c, wg)
-
 	c.SetWriteDeadline(time.Now().Add(1 * time.Second))
 	p := protocol.NewDefaultProtocol()
 	p.MessageID = 1
 	p.ServiceName = "user"
 	p.FunctionName = "login"
-	p.Body = []byte("aaaa")
+	p.Body = []byte(`{"username":"test","password":"123456"}`)
 
 	_, err := c.Write(p.Pack())
 	if err != nil {
-		fmt.Println("Error writing to stream.")
+		fmt.Println("Error writing to stream.", err)
 		return
 	}
 
 	p = protocol.NewDefaultProtocol()
-	fmt.Println("unaryReadConnection...")
 	err = p.UnPack(c)
-	fmt.Println("unaryReadConnection..", err)
 	if err != nil {
-		fmt.Println("Error reading from stream.")
+		fmt.Println("Error reading from stream.", err)
 		return
 	}
 
 	fmt.Println("server response:", string(p.Body), " id:", p.MessageID, " svc:", p.ServiceName, " func:", p.FunctionName)
-}
-
-func unaryReadConnection(c net.Conn, wg *sync.WaitGroup) {
-	wg.Add(1)
-	defer c.Close()
-	defer wg.Done()
-
-	for {
-		p := protocol.NewDefaultProtocol()
-		for {
-			fmt.Println("unaryReadConnection...")
-			err := p.UnPack(c)
-			fmt.Println("unaryReadConnection..", err)
-			if err != nil {
-				fmt.Println("Error reading from stream.")
-				return
-			}
-
-			return
-		}
-	}
 }
 
 func main() {
@@ -121,8 +93,8 @@ func readConnection(c net.Conn) {
 		for {
 			err := p.UnPack(c)
 			if err != nil {
-				fmt.Println("Error reading from stream.")
-				break
+				fmt.Println("Error reading from stream.", err)
+				return
 			}
 
 			fmt.Println("server response, body:", string(p.Body), " id:", p.MessageID, " svc:", p.ServiceName, " func:", p.FunctionName)
